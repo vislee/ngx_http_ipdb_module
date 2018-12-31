@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include <memory.h>
-#include <json/json.h>
+#include <json-c/json.h>
 #include <arpa/inet.h>
 #include "ipdb.h"
 
@@ -205,7 +205,7 @@ int ipdb_find0(ipdb_reader *reader, const char *addr, const char **body) {
 
 int ipdb_find1(ipdb_reader *reader, const char *addr, const char *language, char *body) {
     int err;
-    int off = -1;
+    off_t off = -1;
     for (int i = 0; i < reader->meta->language_length; ++i) {
         if (strcmp(language, reader->meta->language[i].name) == 0) {
             off = reader->meta->language[i].offset;
@@ -221,7 +221,7 @@ int ipdb_find1(ipdb_reader *reader, const char *addr, const char *language, char
         return err;
     }
     size_t p = 0, o = 0, s = 0, e = 0;
-    int len = reader->meta->fields_length;
+    size_t len = reader->meta->fields_length;
 
     while (*(content + p)) {
         if (*(content + p) == '\t') {
@@ -231,7 +231,7 @@ int ipdb_find1(ipdb_reader *reader, const char *addr, const char *language, char
             e = p;
         }
         ++p;
-        if (off && (!s) && o == off) {
+        if (off && (!s) && (off_t)o == off) {
             s = p;
         }
     }

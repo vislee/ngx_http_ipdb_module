@@ -57,4 +57,6 @@ int ipdb_reader_is_ipv6_support(ipdb_reader *reader);
 
 int ipdb_reader_find(ipdb_reader *reader, const char *addr, const char *language, char *body);
 
+int ipdb_search(ipdb_reader *reader, const u_char *ip, int bit_count, int *node);
+int ipdb_resolve(ipdb_reader *reader, int node, const char **bytes);
 #endif //IPDB_C_IPDB_H
