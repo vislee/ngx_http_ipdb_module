@@ -1,0 +1,43 @@
+language: c
+
+os: linux
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    packages:
+      - cpanminus
+      - lcov
+      - json-c
+
+install:
+  - gem install coveralls-lcov
+  - git clone https://github.com/nginx/nginx.git  ../nginx
+  - git clone https://github.com/nginx/nginx-tests.git  ../nginx-tests
+  - rm -f ../nginx-tests/*.t
+  - cp ./t/* ../nginx-tests/
+
+before_script:
+  - lcov --directory ../nginx --zerocounters
+
+script:
+  - ls -ltra
+  - cd ../nginx
+  - ls -ltra
+  - ./auto/configure --prefix=/tmp/nginx --add-module=../ngx_http_ipdb_module 
+    --with-cc-opt="-fprofile-arcs -ftest-coverage" --with-ld-opt="-lgcov"
+  - make -j
+  - make install
+  - cd ../nginx-tests
+  - ls -ltra
+  - TEST_NGINX_BINARY=/tmp/nginx/sbin/nginx prove .
+  - cd ../nginx
+  - sudo lcov --compat-libtool --directory ./objs/addon/ngx_http_waf_module/ --capture
+    --output-file ./coverage.info --base-directory .
+  - ls -ltra
+
+after_success:
+  - coveralls-lcov ./coverage.info
+  - genhtml -s -o /tmp/waf_html coverage.info
