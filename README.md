@@ -95,6 +95,7 @@ ipdb_language
 
 **context:** *http*
 
+set variable language.
 
 [Back to TOC](#table-of-contents)
 
@@ -104,21 +105,22 @@ Variable
 ipdb_country_name
 ----------------
 
-$ipdb_country_name - country name, for example, "中国"
+$ipdb_country_name - country name, for example, "中国", "China"
 
 ipdb_region_name
 ----------------
 
-$ipdb_region_name - country region name, for example, "内蒙古", "北京"
+$ipdb_region_name - country region name, for example, "内蒙古","Nei Mongol", "北京", "Beijing"
 
 ipdb_city_name
 --------------
 
-$ipdb_city_name - city name, for example, "呼和浩特", "北京"
+$ipdb_city_name - city name, for example, "呼和浩特", "Hohhot", "北京", "Beijing"
 
 ipdb_isp_domain
 ---------------
 
+$ipdb_isp_domain - ISP name, for example, "电信", "ChinaTelecom"
 
 
 [Back to TOC](#table-of-contents)
