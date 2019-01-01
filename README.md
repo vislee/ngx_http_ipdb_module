@@ -1,7 +1,7 @@
 Name
 ====
 
-ngx_http_ipdb_module - creates variables with values depending on the client IP address, using the precompiled [ipip.net](https://www.ipip.net) ipdb.
+ngx_http_ipdb_module - creates variables with values depending on the client IP address, using the precompiled [ipip.net](https://www.ipip.net) [ipdb](https://www.ipip.net/ipdb/test).
 
 Table of Contents
 =================
@@ -13,8 +13,10 @@ Table of Contents
     * [ipdb](#ipdb)
     * [ipdb_language](#ipdb_language)
 * [Variable](#variable)
-    * [ipdb_region_name](#ipdb_region_name)
-    * [ipdb_city_name](#ipdb_city_name)
+    * [$ipdb_country_name](#$ipdb_country_name)
+    * [$ipdb_region_name](#$ipdb_region_name)
+    * [$ipdb_city_name](#$ipdb_city_name)
+    * [$ipdb_isp_domain](#$ipdb_isp_domain)
 * [TODO](#todo)
 * [Author](#author)
 * [Copyright and License](#copyright-and-license)
@@ -77,20 +79,47 @@ Directives
 
 ipdb
 ----
+**syntax:** *ipdb file*
+
+**default:** *no*
+
+**context:** *http*
+
+Specifies a database.
 
 ipdb_language
 -------------
+**syntax:** *ipdb_language <EN|CN>*
+
+**default:** *EN*
+
+**context:** *http*
+
 
 [Back to TOC](#table-of-contents)
 
 Variable
 ========
 
-ipdb_region_name
+$ipdb_country_name
 ----------------
 
-ipdb_city_name
+country name, for example, "中国"
+
+$ipdb_region_name
+----------------
+
+country region name, for example, "内蒙古", "北京"
+
+$ipdb_city_name
 --------------
+
+city name, for example, "呼和浩特", "北京"
+
+$ipdb_isp_domain
+---------------
+
+
 
 [Back to TOC](#table-of-contents)
 

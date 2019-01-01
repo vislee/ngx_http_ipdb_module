@@ -89,6 +89,10 @@ ngx_module_t  ngx_http_ipdb_module = {
 
 static ngx_http_variable_t  ngx_http_ipdb_vars[] = {
 
+    { ngx_string("ipdb_country_name"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_country_name, 0, 0 },
+
     { ngx_string("ipdb_region_name"), NULL,
       ngx_http_ipdb_variable,
       NGX_IPDB_region_name, 0, 0 },
@@ -96,6 +100,10 @@ static ngx_http_variable_t  ngx_http_ipdb_vars[] = {
     { ngx_string("ipdb_city_name"), NULL,
       ngx_http_ipdb_variable,
       NGX_IPDB_city_name, 0, 0 },
+
+    { ngx_string("ipdb_isp_domain"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_isp_domain, 0, 0 },
 
       ngx_http_null_variable
 };
