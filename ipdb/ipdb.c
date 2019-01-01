@@ -22,6 +22,8 @@ unsigned int l2b(unsigned int x) {
 }
 
 ipdb_meta_data *parse_meta_data(const char *meta_json) {
+    int i = 0;
+
     ipdb_meta_data *meta_data = (ipdb_meta_data *) malloc(sizeof(ipdb_meta_data));
     memset(meta_data, 0, sizeof(ipdb_meta_data));
     json_object *obj = json_tokener_parse(meta_json);
@@ -37,7 +39,7 @@ ipdb_meta_data *parse_meta_data(const char *meta_json) {
     json_object_object_get_ex(obj, "fields", &value);
     meta_data->fields_length = json_object_array_length(value);
     meta_data->fields = (char **) malloc(sizeof(char *) * meta_data->fields_length);
-    for (int i = 0; i < meta_data->fields_length; ++i) {
+    for (i = 0; i < meta_data->fields_length; ++i) {
         json_object *it = json_object_array_get_idx(value, i);
         meta_data->fields[i] = malloc(sizeof(char) * json_object_get_string_len(it) + 1);
         strcpy(meta_data->fields[i], json_object_get_string(it));
@@ -47,7 +49,7 @@ ipdb_meta_data *parse_meta_data(const char *meta_json) {
     meta_data->language = (ipdb_meta_data_language *) malloc(
             sizeof(ipdb_meta_data_language) * meta_data->language_length);
     struct json_object_iterator language = json_object_iter_begin(value);
-    for (int i = 0; i < meta_data->language_length; ++i) {
+    for (i = 0; i < meta_data->language_length; ++i) {
         strcpy(meta_data->language[i].name, json_object_iter_peek_name(&language));
         struct json_object *it = json_object_iter_peek_value(&language);
         meta_data->language[i].offset = json_object_get_int(it);
@@ -97,7 +99,8 @@ int ipdb_reader_new(const char *file, ipdb_reader **reader) {
     rd->data_size = data_len;
 
     int node = 0;
-    for (int i = 0; i < 96 && node < rd->meta->node_count; ++i) {
+    int i = 0;
+    for (i = 0; i < 96 && node < rd->meta->node_count; ++i) {
         if (i >= 80) {
             node = ipdb_read_node(rd, node, 1);
         } else {
@@ -111,9 +114,10 @@ int ipdb_reader_new(const char *file, ipdb_reader **reader) {
 }
 
 void ipdb_reader_free(ipdb_reader **reader) {
+    int i = 0;
     if ((*reader)->meta) {
         ipdb_meta_data *meta_data = (*reader)->meta;
-        for (int i = 0; i < meta_data->fields_length; ++i) {
+        for (i = 0; i < meta_data->fields_length; ++i) {
             free(meta_data->fields[i]);
         }
         free(meta_data->fields);
@@ -152,6 +156,8 @@ int ipdb_resolve(ipdb_reader *reader, int node, const char **bytes) {
 }
 
 int ipdb_search(ipdb_reader *reader, const u_char *ip, int bit_count, int *node) {
+    int i = 0;
+
     *node = 0;
 
     if (bit_count == 32) {
@@ -160,7 +166,7 @@ int ipdb_search(ipdb_reader *reader, const u_char *ip, int bit_count, int *node)
         *node = 0;
     }
 
-    for (int i = 0; i < bit_count; ++i) {
+    for (i = 0; i < bit_count; ++i) {
         if (*node > reader->meta->node_count) {
             break;
         }
@@ -204,9 +210,9 @@ int ipdb_find0(ipdb_reader *reader, const char *addr, const char **body) {
 }
 
 int ipdb_find1(ipdb_reader *reader, const char *addr, const char *language, char *body) {
-    int err;
+    int err, i;
     off_t off = -1;
-    for (int i = 0; i < reader->meta->language_length; ++i) {
+    for (i = 0; i < reader->meta->language_length; ++i) {
         if (strcmp(language, reader->meta->language[i].name) == 0) {
             off = reader->meta->language[i].offset;
             break;
