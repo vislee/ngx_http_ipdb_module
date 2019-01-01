@@ -10,7 +10,7 @@ addons:
     packages:
       - cpanminus
       - lcov
-      - json-c
+      - libjson-c-dev
 
 install:
   - gem install coveralls-lcov
