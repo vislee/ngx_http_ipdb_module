@@ -19,6 +19,8 @@
 typedef struct {
     ipdb_reader    *ipdb;
     ngx_str_t       lang;
+    ngx_array_t    *proxies;    /* array of ngx_cidr_t */
+    ngx_flag_t      proxy_recursive;
 } ngx_http_ipdb_conf_t;
 
 
@@ -28,6 +30,7 @@ static void *ngx_http_ipdb_create_conf(ngx_conf_t *cf);
 static char *ngx_http_ipdb_init_conf(ngx_conf_t *cf, void *conf);
 static void ngx_http_ipdb_cleanup(void *data);
 static char *ngx_http_ipdb_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static ngx_int_t ngx_http_ipdb_variable(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
 
@@ -39,7 +42,7 @@ static ngx_conf_post_handler_pt  ngx_http_ipdb_language_p =
 static ngx_command_t  ngx_http_ipdb_commands[] = {
 
     { ngx_string("ipdb"),
-      NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE12,
+      NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
       ngx_http_ipdb_open,
       NGX_HTTP_MAIN_CONF_OFFSET,
       0,
@@ -51,6 +54,20 @@ static ngx_command_t  ngx_http_ipdb_commands[] = {
       NGX_HTTP_MAIN_CONF_OFFSET,
       offsetof(ngx_http_ipdb_conf_t, lang),
       &ngx_http_ipdb_language_p },
+
+    { ngx_string("ipdb_proxy"),
+      NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_http_ipdb_proxy,
+      NGX_HTTP_MAIN_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("ipdb_proxy_recursive"),
+      NGX_HTTP_MAIN_CONF|NGX_CONF_FLAG,
+      ngx_conf_set_flag_slot,
+      NGX_HTTP_MAIN_CONF_OFFSET,
+      offsetof(ngx_http_ipdb_conf_t, proxy_recursive),
+      NULL },
 
       ngx_null_command
 };
@@ -154,6 +171,7 @@ ngx_http_ipdb_create_conf(ngx_conf_t *cf)
         return NULL;
     }
 
+    conf->proxy_recursive = NGX_CONF_UNSET;
 
     cln = ngx_pool_cleanup_add(cf->pool, 0);
     if (cln == NULL) {
@@ -175,6 +193,8 @@ ngx_http_ipdb_init_conf(ngx_conf_t *cf, void *conf)
     if (!icf->lang.data) {
         ngx_str_set(&icf->lang, "EN");
     }
+
+    ngx_conf_init_value(icf->proxy_recursive, 0);
 
     return NGX_CONF_OK;
 }
@@ -213,6 +233,65 @@ ngx_http_ipdb_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         return NGX_CONF_ERROR;
     }
+
+    return NGX_CONF_OK;
+}
+
+static ngx_int_t
+ngx_http_ipdb_cidr_value(ngx_conf_t *cf, ngx_str_t *net, ngx_cidr_t *cidr)
+{
+    ngx_int_t  rc;
+
+    if (ngx_strcmp(net->data, "255.255.255.255") == 0) {
+        cidr->family = AF_INET;
+        cidr->u.in.addr = 0xffffffff;
+        cidr->u.in.mask = 0xffffffff;
+
+        return NGX_OK;
+    }
+
+    rc = ngx_ptocidr(net, cidr);
+
+    if (rc == NGX_ERROR) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, "invalid network \"%V\"", net);
+        return NGX_ERROR;
+    }
+
+    if (rc == NGX_DONE) {
+        ngx_conf_log_error(NGX_LOG_WARN, cf, 0,
+                           "low address bits of %V are meaningless", net);
+    }
+
+    return NGX_OK;
+}
+
+static char *
+ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_http_ipdb_conf_t  *icf = conf;
+
+    ngx_str_t   *value;
+    ngx_cidr_t  cidr, *c;
+
+    value = cf->args->elts;
+
+    if (ngx_http_ipdb_cidr_value(cf, &value[1], &cidr) != NGX_OK) {
+        return NGX_CONF_ERROR;
+    }
+
+    if (icf->proxies == NULL) {
+        icf->proxies = ngx_array_create(cf->pool, 4, sizeof(ngx_cidr_t));
+        if (icf->proxies == NULL) {
+            return NGX_CONF_ERROR;
+        }
+    }
+
+    c = ngx_array_push(icf->proxies);
+    if (c == NULL) {
+        return NGX_CONF_ERROR;
+    }
+
+    *c = cidr;
 
     return NGX_CONF_OK;
 }
@@ -345,6 +424,7 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     char                    body[512];
     ngx_int_t               err;
     ngx_addr_t              addr;
+    ngx_array_t            *xfwd;
     ngx_http_ipdb_conf_t   *icf;
 
 #if (NGX_DEBUG)
@@ -363,6 +443,13 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     // err = ipdb_reader_find(icf->ipdb, "36.102.4.81", (const char *)icf->lang.data, body);
     addr.sockaddr = r->connection->sockaddr;
     addr.socklen = r->connection->socklen;
+
+    xfwd = &r->headers_in.x_forwarded_for;
+    if (xfwd->nelts > 0 && icf->proxies != NULL) {
+        (void) ngx_http_get_forwarded_addr(r, &addr, xfwd, NULL,
+                                           icf->proxies, icf->proxy_recursive);
+    }
+
     err = ngx_http_ipdb_item_by_addr(icf->ipdb, &addr, (const char *)icf->lang.data, body);
     if (err) {
         goto not_found;

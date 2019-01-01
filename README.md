@@ -12,6 +12,8 @@ Table of Contents
 * [Directives](#directives)
     * [ipdb](#ipdb)
     * [ipdb_language](#ipdb_language)
+    * [ipdb_proxy](#ipdb_proxy)
+    * [ipdb_proxy_recursive](#ipdb_proxy_recursive)
 * [Variable](#variable)
     * [$ipdb_country_name](#ipdb_country_name)
     * [$ipdb_region_name](#ipdb_region_name)
@@ -20,11 +22,21 @@ Table of Contents
 * [TODO](#todo)
 * [Author](#author)
 * [Copyright and License](#copyright-and-license)
+* [See Also](#see-also)
 
 
 Status
 ======
 The module is currently in active development.
+
+[Back to TOC](#table-of-contents)
+
+Install
+=======
+
+```sh
+configure --prefix=/usr/local/nginx --add-module=./github.com/vislee/ngx_http_ipdb_module
+```
 
 [Back to TOC](#table-of-contents)
 
@@ -40,15 +52,14 @@ http {
 
     ipdb /tmp/nginx/conf/ipiptest.ipdb;
     ipdb_language CN;
+    ipdb_proxy 127.0.0.1;
+    ipdb_proxy_recursive on;
 
     server {
         listen       8090;
         server_name  localhost;
 
         ......
-
-        set_real_ip_from 127.0.0.1;
-        real_ip_header X-Forwarded-For;
 
         location / {
             return 200 $ipdb_city_name;
@@ -79,9 +90,9 @@ Directives
 
 ipdb
 ----
-**syntax:** *ipdb file*
+**syntax:** *ipdb file;*
 
-**default:** *no*
+**default:** *-*
 
 **context:** *http*
 
@@ -89,7 +100,7 @@ Specifies a database.
 
 ipdb_language
 -------------
-**syntax:** *ipdb_language <EN|CN>*
+**syntax:** *ipdb_language EN|CN;*
 
 **default:** *EN*
 
@@ -97,7 +108,29 @@ ipdb_language
 
 set variable language.
 
+ipdb_proxy
+----------
+**syntax:** *ipdb_proxy address|CIDR;*
+
+**default:** *-*
+
+**context:** *http*
+
+Defines trusted addresses.
+
+ipdb_proxy_recursive
+--------------------
+**syntax:** *ipdb_proxy_recursive on|off;*
+
+**default:** *off*
+
+**context:** *http*
+
+Is recursive search.
+
+
 [Back to TOC](#table-of-contents)
+
 
 Variable
 ========
@@ -135,10 +168,16 @@ wenqiang li(vislee)
 Copyright and License
 =====================
 
-This module is licensed under the GPL license.
+This module is licensed under the [GPL](http://www.gnu.org/licenses/licenses.en.html) license.
 
 Copyright (C) 2018-2019, by vislee.
 
 All rights reserved.
 
 [Back to TOC](#table-of-contents)
+
+
+See Also
+========
+
++ [ngx_http_geoip_module](http://nginx.org/en/docs/http/ngx_http_geoip_module.html#geoip_proxy)
