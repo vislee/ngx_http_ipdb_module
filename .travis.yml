@@ -27,7 +27,7 @@ script:
   - cd ../nginx
   - ls -ltra
   - ./auto/configure --prefix=/tmp/nginx --add-module=../ngx_http_ipdb_module 
-    --with-cc-opt="-Du_char=\"unsigned char\" -std=c99 -Wno-unused-result -fprofile-arcs -ftest-coverage" --with-ld-opt="-lgcov"
+    --with-cc-opt="-Du_char='unsigned char' -std=c99 -Wno-unused-result -fprofile-arcs -ftest-coverage" --with-ld-opt="-lgcov"
   - make -j
   - make install
   - cd ../nginx-tests
