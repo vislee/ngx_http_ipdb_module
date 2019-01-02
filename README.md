@@ -1,6 +1,9 @@
 Name
 ====
 
+
+[![travis-ci](https://travis-ci.org/vislee/ngx_http_ipdb_module.svg?branch=master)](https://travis-ci.org/vislee/ngx_http_ipdb_module)
+
 ngx_http_ipdb_module - creates variables with values depending on the client IP address, using the precompiled [ipip.net](https://www.ipip.net) [ipdb](https://www.ipip.net/ipdb/test).
 
 Table of Contents
