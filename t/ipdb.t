@@ -2,7 +2,7 @@
 
 # (C) vislee
 
-# Tests for http waf module.
+# Tests for http ipdb module.
 
 ###############################################################################
 
