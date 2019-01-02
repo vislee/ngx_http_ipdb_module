@@ -65,13 +65,17 @@ http {
         location /city/ {
             return 200 $ipdb_city_name;
         }
+
+        location /isp/ {
+            return 200 null$ipdb_isp_domain;
+        }
     }
 
 }
 
 EOF
 
-$t->try_run('no ipdb')->plan(6);
+$t->try_run('no ipdb')->plan(7);
 
 ###############################################################################
 like(http(<<EOF), qr/testipdb/, 'ipdb test');
@@ -119,4 +123,11 @@ X-Forwarded-For: 36.102.4.81,192.168.0.1
 
 EOF
 
+
+like(http(<<EOF), qr/null$/, 'ipdb isp');
+GET /isp/ HTTP/1.0
+Host: localhost
+X-Forwarded-For: 36.102.4.81,192.168.0.1
+
+EOF
 
