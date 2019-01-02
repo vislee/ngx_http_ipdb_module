@@ -34,10 +34,10 @@ script:
   - ls -ltra
   - TEST_NGINX_BINARY=/tmp/nginx/sbin/nginx prove .
   - cd ../nginx
-  - sudo lcov --compat-libtool --directory ./objs/addon/ngx_http_waf_module/ --capture
+  - sudo lcov --compat-libtool --directory ./objs/addon/ngx_http_ipdb_module/ --capture
     --output-file ./coverage.info --base-directory .
   - ls -ltra
 
 after_success:
   - coveralls-lcov ./coverage.info
-  - genhtml -s -o /tmp/waf_html coverage.info
+  - genhtml -s -o /tmp/ipdb_html coverage.info
