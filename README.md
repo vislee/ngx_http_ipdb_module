@@ -80,8 +80,9 @@ TODO
 
  + add variable
      * ipdb_country_code
-     * ipdb_country_name
+     * ipdb_continent_code
      * ipdb_org
+     * ipdb_idc
      * ipdb_latitude
      * ipdb_longitude
  + from header ip
