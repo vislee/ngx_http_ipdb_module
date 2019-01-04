@@ -59,6 +59,10 @@ http {
             return 200 $ipdb_country_name;
         }
 
+        location /ipv6/country/ {
+            return 200 null$ipdb_country_name;
+        }
+
         location /region/ {
             return 200 $ipdb_region_name;
         }
@@ -76,7 +80,7 @@ http {
 
 EOF
 
-$t->try_run('no ipdb')->plan(7);
+$t->try_run('no ipdb')->plan(8);
 
 ###############################################################################
 like(http(<<EOF), qr/testipdb/, 'ipdb test');
@@ -90,6 +94,14 @@ like(http(<<EOF), qr/中国/, 'ipdb country');
 GET /country/ HTTP/1.0
 Host: localhost
 X-Forwarded-For: 36.102.4.81,192.168.0.1
+
+EOF
+
+
+like(http(<<EOF), qr/null$/, 'ipdb country');
+GET /ipv6/country/ HTTP/1.0
+Host: localhost
+X-Forwarded-For: a80::7cfc:c767:aded:c04e
 
 EOF
 
