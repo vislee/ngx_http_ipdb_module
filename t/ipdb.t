@@ -40,7 +40,8 @@ http {
     ipdb ./ipiptest.ipdb;
     ipdb_language CN;
     ipdb_proxy 127.0.0.1;
-    ipdb_proxy 192.168.0.1;
+    ipdb_proxy 192.168.0.1/24;
+    ipdb_proxy 255.255.255.255;
     ipdb_proxy_recursive on;
 
     server {
@@ -96,7 +97,7 @@ EOF
 like(http(<<EOF), qr/局域网/, 'ipdb country proxy');
 GET /country/ HTTP/1.0
 Host: localhost
-X-Forwarded-For: 36.102.4.81,192.168.0.2
+X-Forwarded-For: 36.102.4.81,192.168.1.2
 
 EOF
 
