@@ -31,6 +31,8 @@ $t->write_file_expand('nginx.conf', <<'EOF');
 
 daemon off;
 
+# load_module /tmp/nginx/modules/ngx_http_ipdb_module.so;
+
 events {
 }
 

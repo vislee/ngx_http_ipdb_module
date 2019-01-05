@@ -40,6 +40,8 @@ Install
 
 ```sh
 configure --prefix=/usr/local/nginx --add-module=./github.com/vislee/ngx_http_ipdb_module
+# or
+configure --prefix=/usr/local/nginx --add-dynamic-module=./github.com/vislee/ngx_http_ipdb_module --with-compat
 ```
 
 [Back to TOC](#table-of-contents)
@@ -48,6 +50,9 @@ Example Configuration
 ====================
 
 ```nginx
+
+# load_module ./modules/ngx_http_ipdb_module.so;
+
 http {
     include       mime.types;
     default_type  application/octet-stream;
