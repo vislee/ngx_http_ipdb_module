@@ -18,19 +18,32 @@
 
 typedef struct {
     ipdb_reader    *ipdb;
-    ngx_str_t       lang;
     ngx_array_t    *proxies;    /* array of ngx_cidr_t */
     ngx_flag_t      proxy_recursive;
-} ngx_http_ipdb_conf_t;
+} ngx_http_ipdb_main_conf_t;
+
+typedef struct ngx_http_ipdb_loc_conf_s {
+    ngx_str_t                 lang;
+    ngx_str_t                 spec_addr;
+    ngx_http_complex_value_t  key;
+} ngx_http_ipdb_loc_conf_t;
 
 
 static char *ngx_http_ipdb_language(ngx_conf_t *cf, void *post, void *data);
 static ngx_int_t ngx_http_ipdb_add_variables(ngx_conf_t *cf);
-static void *ngx_http_ipdb_create_conf(ngx_conf_t *cf);
-static char *ngx_http_ipdb_init_conf(ngx_conf_t *cf, void *conf);
+static void *ngx_http_ipdb_create_main_conf(ngx_conf_t *cf);
+static char *ngx_http_ipdb_init_main_conf(ngx_conf_t *cf, void *conf);
+static void *ngx_http_ipdb_create_loc_conf(ngx_conf_t *cf);
+static char *ngx_http_ipdb_merge_loc_conf(ngx_conf_t *cf,
+    void *parent, void *child);
 static void ngx_http_ipdb_cleanup(void *data);
 static char *ngx_http_ipdb_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+#if 0
+static char *ngx_http_ipdb_spec_addr(ngx_conf_t *cf, ngx_command_t *cmd,
+    void *conf);
+#endif
+
 static ngx_int_t ngx_http_ipdb_variable(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
 
@@ -49,10 +62,10 @@ static ngx_command_t  ngx_http_ipdb_commands[] = {
       NULL },
 
     { ngx_string("ipdb_language"),
-      NGX_HTTP_MAIN_CONF|NGX_CONF_FLAG,
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
       ngx_conf_set_str_slot,
-      NGX_HTTP_MAIN_CONF_OFFSET,
-      offsetof(ngx_http_ipdb_conf_t, lang),
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_ipdb_loc_conf_t, lang),
       &ngx_http_ipdb_language_p },
 
     { ngx_string("ipdb_proxy"),
@@ -66,7 +79,14 @@ static ngx_command_t  ngx_http_ipdb_commands[] = {
       NGX_HTTP_MAIN_CONF|NGX_CONF_FLAG,
       ngx_conf_set_flag_slot,
       NGX_HTTP_MAIN_CONF_OFFSET,
-      offsetof(ngx_http_ipdb_conf_t, proxy_recursive),
+      offsetof(ngx_http_ipdb_main_conf_t, proxy_recursive),
+      NULL },
+
+     { ngx_string("ipdb_specifies_addr"),
+      NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
+      ngx_conf_set_str_slot,
+      NGX_HTTP_LOC_CONF_OFFSET,
+      offsetof(ngx_http_ipdb_loc_conf_t, spec_addr),
       NULL },
 
       ngx_null_command
@@ -77,14 +97,14 @@ static ngx_http_module_t  ngx_http_ipdb_module_ctx = {
     ngx_http_ipdb_add_variables,          /* preconfiguration */
     NULL,                                 /* postconfiguration */
 
-    ngx_http_ipdb_create_conf,            /* create main configuration */
-    ngx_http_ipdb_init_conf,              /* init main configuration */
+    ngx_http_ipdb_create_main_conf,       /* create main configuration */
+    ngx_http_ipdb_init_main_conf,         /* init main configuration */
 
     NULL,                                 /* create server configuration */
     NULL,                                 /* merge server configuration */
 
-    NULL,                                 /* create location configuration */
-    NULL                                  /* merge location configuration */
+    ngx_http_ipdb_create_loc_conf,        /* create location configuration */
+    ngx_http_ipdb_merge_loc_conf          /* merge location configuration */
 };
 
 
@@ -161,12 +181,12 @@ ngx_http_ipdb_add_variables(ngx_conf_t *cf)
 
 
 static void *
-ngx_http_ipdb_create_conf(ngx_conf_t *cf)
+ngx_http_ipdb_create_main_conf(ngx_conf_t *cf)
 {
-    ngx_pool_cleanup_t     *cln;
-    ngx_http_ipdb_conf_t   *conf;
+    ngx_pool_cleanup_t          *cln;
+    ngx_http_ipdb_main_conf_t   *conf;
 
-    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_ipdb_conf_t));
+    conf = ngx_pcalloc(cf->pool, sizeof(ngx_http_ipdb_main_conf_t));
     if (conf == NULL) {
         return NULL;
     }
@@ -186,15 +206,52 @@ ngx_http_ipdb_create_conf(ngx_conf_t *cf)
 
 
 static char *
-ngx_http_ipdb_init_conf(ngx_conf_t *cf, void *conf)
+ngx_http_ipdb_init_main_conf(ngx_conf_t *cf, void *conf)
 {
-    ngx_http_ipdb_conf_t  *icf = conf;
+    ngx_http_ipdb_main_conf_t  *imcf = conf;
 
-    if (!icf->lang.data) {
-        ngx_str_set(&icf->lang, "EN");
+    ngx_conf_init_value(imcf->proxy_recursive, 0);
+
+    return NGX_CONF_OK;
+}
+
+
+static void *
+ngx_http_ipdb_create_loc_conf(ngx_conf_t *cf)
+{
+    ngx_http_ipdb_loc_conf_t  *ilcf;
+
+    ilcf = ngx_pcalloc(cf->pool, sizeof(ngx_http_ipdb_loc_conf_t));
+    if (ilcf == NULL) {
+        return NULL;
     }
 
-    ngx_conf_init_value(icf->proxy_recursive, 0);
+    return ilcf;
+}
+
+
+static char *
+ngx_http_ipdb_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
+{
+    ngx_http_compile_complex_value_t   ccv;
+
+    ngx_http_ipdb_loc_conf_t *prev = parent;
+    ngx_http_ipdb_loc_conf_t *conf = child;
+
+    ngx_conf_merge_str_value(conf->lang, prev->lang, "EN");
+    ngx_conf_merge_str_value(conf->spec_addr, prev->spec_addr, "");
+
+    if (conf->spec_addr.len > 0) {
+        ngx_memzero(&ccv, sizeof(ngx_http_compile_complex_value_t));
+
+        ccv.cf = cf;
+        ccv.value = &conf->spec_addr;
+        ccv.complex_value = &conf->key;
+
+        if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
+            return NGX_CONF_ERROR;
+        }
+    }
 
     return NGX_CONF_OK;
 }
@@ -203,10 +260,10 @@ ngx_http_ipdb_init_conf(ngx_conf_t *cf, void *conf)
 static void
 ngx_http_ipdb_cleanup(void *data)
 {
-    ngx_http_ipdb_conf_t  *icf = data;
+    ngx_http_ipdb_main_conf_t  *imcf = data;
 
-    if (icf->ipdb) {
-        ipdb_reader_free(&icf->ipdb);
+    if (imcf->ipdb) {
+        ipdb_reader_free(&imcf->ipdb);
     }
 }
 
@@ -214,20 +271,20 @@ ngx_http_ipdb_cleanup(void *data)
 static char *
 ngx_http_ipdb_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_int_t              err;
-    ngx_http_ipdb_conf_t  *icf = conf;
+    ngx_int_t                   err;
+    ngx_http_ipdb_main_conf_t  *imcf = conf;
 
     ngx_str_t  *value;
 
-    if (icf->ipdb) {
+    if (imcf->ipdb) {
         return "is duplicate";
     }
 
     value = cf->args->elts;
 
-    err = ipdb_reader_new((char *) value[1].data, &icf->ipdb);
+    err = ipdb_reader_new((char *) value[1].data, &imcf->ipdb);
 
-    if (err || icf->ipdb == NULL) {
+    if (err || imcf->ipdb == NULL) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                            "ipdb_reader_new(\"%V\") failed", &value[1]);
 
@@ -268,7 +325,7 @@ ngx_http_ipdb_cidr_value(ngx_conf_t *cf, ngx_str_t *net, ngx_cidr_t *cidr)
 static char *
 ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
-    ngx_http_ipdb_conf_t  *icf = conf;
+    ngx_http_ipdb_main_conf_t  *imcf = conf;
 
     ngx_str_t   *value;
     ngx_cidr_t  cidr, *c;
@@ -279,14 +336,14 @@ ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    if (icf->proxies == NULL) {
-        icf->proxies = ngx_array_create(cf->pool, 4, sizeof(ngx_cidr_t));
-        if (icf->proxies == NULL) {
+    if (imcf->proxies == NULL) {
+        imcf->proxies = ngx_array_create(cf->pool, 4, sizeof(ngx_cidr_t));
+        if (imcf->proxies == NULL) {
             return NGX_CONF_ERROR;
         }
     }
 
-    c = ngx_array_push(icf->proxies);
+    c = ngx_array_push(imcf->proxies);
     if (c == NULL) {
         return NGX_CONF_ERROR;
     }
@@ -295,6 +352,30 @@ ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     return NGX_CONF_OK;
 }
+
+#if 0
+static char *
+ngx_http_ipdb_spec_addr(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_str_t                         *value;
+    ngx_http_ipdb_main_conf_t         *imcf = conf;
+    ngx_http_compile_complex_value_t   ccv;
+
+    value = cf->args->elts;
+
+    ngx_memzero(&ccv, sizeof(ngx_http_compile_complex_value_t));
+
+    ccv.cf = cf;
+    ccv.value = &value[1];
+    ccv.complex_value = &imcf->spec_addr;
+
+    if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
+        return NGX_CONF_ERROR;
+    }
+
+    return NGX_CONF_OK;
+}
+#endif
 
 // "a\tb\t\tc"
 // ""
@@ -364,7 +445,7 @@ ngx_http_ipdb_item_by_addr(ipdb_reader *reader, ngx_addr_t *addr,
 
         sin = (struct sockaddr_in *) addr->sockaddr;
         // sin->sin_addr.s_addr
-        err = ipdb_search(reader, (const u_char *) &sin->sin_addr.s_addr, 32, &node);
+        err = ipdb_search(reader, (const u_char *)&sin->sin_addr.s_addr, 32, &node);
         if (err != ErrNoErr) {
             return err;
         }
@@ -377,7 +458,7 @@ ngx_http_ipdb_item_by_addr(ipdb_reader *reader, ngx_addr_t *addr,
 
         struct in6_addr  *inaddr6;
         inaddr6 = &((struct sockaddr_in6 *) addr->sockaddr)->sin6_addr;
-        err = ipdb_search(reader, (const u_char *) &inaddr6->s6_addr, 128, &node);
+        err = ipdb_search(reader, (const u_char *)&inaddr6->s6_addr, 128, &node);
         if (err != ErrNoErr) {
             return err;
         }
@@ -419,13 +500,15 @@ static ngx_int_t
 ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     uintptr_t data)
 {
-    size_t                  len;
-    char                   *p;
-    char                    body[512];
-    ngx_int_t               err;
-    ngx_addr_t              addr;
-    ngx_array_t            *xfwd;
-    ngx_http_ipdb_conf_t   *icf;
+    size_t                       len;
+    char                        *p, *t;
+    char                         body[512];
+    ngx_int_t                    err;
+    ngx_str_t                    spec_addr;
+    ngx_addr_t                   addr;
+    ngx_array_t                 *xfwd;
+    ngx_http_ipdb_main_conf_t   *imcf;
+    ngx_http_ipdb_loc_conf_t    *ilcf;
 
 #if (NGX_DEBUG)
     ngx_str_t               debug;
@@ -434,24 +517,57 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     ngx_log_debug0(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
         "ngx_http_ipdb_variable");
 
-    icf = ngx_http_get_module_main_conf(r, ngx_http_ipdb_module);
+    imcf = ngx_http_get_module_main_conf(r, ngx_http_ipdb_module);
 
-    if (icf->ipdb == NULL) {
+    if (imcf == NULL || imcf->ipdb == NULL) {
         goto not_found;
     }
 
-    // err = ipdb_reader_find(icf->ipdb, "36.102.4.81", (const char *)icf->lang.data, body);
-    addr.sockaddr = r->connection->sockaddr;
-    addr.socklen = r->connection->socklen;
+    ilcf = ngx_http_get_module_loc_conf(r, ngx_http_ipdb_module);
 
-    xfwd = &r->headers_in.x_forwarded_for;
-    if (xfwd->nelts > 0 && icf->proxies != NULL) {
-        (void) ngx_http_get_forwarded_addr(r, &addr, xfwd, NULL,
-                                           icf->proxies, icf->proxy_recursive);
+    if (ilcf == NULL || ilcf->lang.data == NULL) {
+        goto not_found;
     }
 
-    err = ngx_http_ipdb_item_by_addr(icf->ipdb, &addr, (const char *)icf->lang.data, body);
+    if (ilcf->key.value.len > 0) {
+        if (ngx_http_complex_value(r, &ilcf->key, &spec_addr) != NGX_OK) {
+            goto not_found;
+        }
+
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+        "ngx_http_ipdb_variable, spec_addr: \"%V\"", &spec_addr);
+
+        t = ngx_pcalloc(r->pool, spec_addr.len + 1);
+        if (t == NULL) {
+            goto not_found;
+        }
+
+        ngx_memcpy(t, spec_addr.data, spec_addr.len);
+        t[spec_addr.len] = 0;
+
+        err = ipdb_reader_find(imcf->ipdb, (const char*)t,
+            (const char *)ilcf->lang.data, body);
+
+        ngx_pfree(r->pool, t);
+
+    } else {
+        addr.sockaddr = r->connection->sockaddr;
+        addr.socklen = r->connection->socklen;
+
+        xfwd = &r->headers_in.x_forwarded_for;
+        if (xfwd->nelts > 0 && imcf->proxies != NULL) {
+            (void) ngx_http_get_forwarded_addr(r, &addr, xfwd, NULL,
+                imcf->proxies, imcf->proxy_recursive);
+        }
+
+        err = ngx_http_ipdb_item_by_addr(imcf->ipdb, &addr,
+            (const char *)ilcf->lang.data, body);
+    }
+
     if (err) {
+        ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
+        "ngx_http_ipdb_variable, ipdb find error: %d", err);
+
         goto not_found;
     }
 

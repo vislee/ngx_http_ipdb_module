@@ -5,7 +5,7 @@ Name
 [![travis-ci](https://travis-ci.org/vislee/ngx_http_ipdb_module.svg?branch=master)](https://travis-ci.org/vislee/ngx_http_ipdb_module)
 [![Coverage Status](https://coveralls.io/repos/github/vislee/ngx_http_ipdb_module/badge.svg?branch=master)](https://coveralls.io/github/vislee/ngx_http_ipdb_module?branch=master)
 
-ngx_http_ipdb_module - creates variables with values depending on the client IP address, using the precompiled [ipip.net](https://www.ipip.net) [ipdb](https://www.ipip.net/ipdb/test).
+ngx_http_ipdb_module - creates variables with values depending on the client IP address or specifies address, using the precompiled [ipip.net](https://www.ipip.net) [ipdb](https://www.ipip.net/ipdb/test).
 
 Table of Contents
 =================
@@ -18,6 +18,7 @@ Table of Contents
     * [ipdb_language](#ipdb_language)
     * [ipdb_proxy](#ipdb_proxy)
     * [ipdb_proxy_recursive](#ipdb_proxy_recursive)
+    * [ipdb_specifies_addr](#ipdb_specifies_addr)
 * [Variable](#variable)
     * [$ipdb_country_name](#ipdb_country_name)
     * [$ipdb_region_name](#ipdb_region_name)
@@ -71,6 +72,8 @@ http {
         ......
 
         location / {
+            # ipdb_specifies_addr $http_addr;
+            # ipdb_language EN;
             return 200 $ipdb_city_name;
         }
     }
@@ -90,8 +93,6 @@ TODO
      * ipdb_idc
      * ipdb_latitude
      * ipdb_longitude
- + from header ip
- + from args ip
 
 [Back to TOC](#table-of-contents)
 
@@ -114,7 +115,7 @@ ipdb_language
 
 **default:** *EN*
 
-**context:** *http*
+**context:** *http,server,location*
 
 set variable language.
 
@@ -138,6 +139,15 @@ ipdb_proxy_recursive
 
 Is recursive search.
 
+ipdb_specifies_addr
+-------------------
+**syntax:** *ipdb_specifies_addr address;*
+
+**default:** *-*
+
+**context:** *http,server,location*
+
+Specifies the address. The address can contain text, variables.
 
 [Back to TOC](#table-of-contents)
 
