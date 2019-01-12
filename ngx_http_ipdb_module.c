@@ -39,11 +39,6 @@ static char *ngx_http_ipdb_merge_loc_conf(ngx_conf_t *cf,
 static void ngx_http_ipdb_cleanup(void *data);
 static char *ngx_http_ipdb_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
-#if 0
-static char *ngx_http_ipdb_spec_addr(ngx_conf_t *cf, ngx_command_t *cmd,
-    void *conf);
-#endif
-
 static ngx_int_t ngx_http_ipdb_variable(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
 
@@ -353,29 +348,6 @@ ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-#if 0
-static char *
-ngx_http_ipdb_spec_addr(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
-{
-    ngx_str_t                         *value;
-    ngx_http_ipdb_main_conf_t         *imcf = conf;
-    ngx_http_compile_complex_value_t   ccv;
-
-    value = cf->args->elts;
-
-    ngx_memzero(&ccv, sizeof(ngx_http_compile_complex_value_t));
-
-    ccv.cf = cf;
-    ccv.value = &value[1];
-    ccv.complex_value = &imcf->spec_addr;
-
-    if (ngx_http_compile_complex_value(&ccv) != NGX_OK) {
-        return NGX_CONF_ERROR;
-    }
-
-    return NGX_CONF_OK;
-}
-#endif
 
 // "a\tb\t\tc"
 // ""
@@ -590,9 +562,6 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
         "ngx_http_ipdb_variable, %l res: \"%V\"", data, &debug);
 #endif
-
-    // ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
-    //     "=========ngx_http_ipdb_variable. res: %s", p);
 
     v->data = ngx_pnalloc(r->pool, len);
     if (v->data == NULL) {
