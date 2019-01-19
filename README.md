@@ -41,10 +41,22 @@ Install
 =======
 
 ```sh
+# install json-c lib
+# centos
+yum install json-c-devel -y
+#or mac OSX
+brew install json-c
+
 configure --prefix=/usr/local/nginx --add-module=./github.com/vislee/ngx_http_ipdb_module
-# or
+# or dynamic compile
 configure --prefix=/usr/local/nginx --add-dynamic-module=./github.com/vislee/ngx_http_ipdb_module --with-compat
 ```
+
+The following information is success:
+
+ >> checking for json-c library ... found
+ >> + ngx_http_ipdb_module was configured
+
 
 [Back to TOC](#table-of-contents)
 
