@@ -24,6 +24,7 @@ Table of Contents
     * [$ipdb_region_name](#ipdb_region_name)
     * [$ipdb_city_name](#ipdb_city_name)
     * [$ipdb_isp_domain](#ipdb_isp_domain)
+    * [$ipdb_raw](#ipdb_raw)
 * [TODO](#todo)
 * [Author](#author)
 * [Copyright and License](#copyright-and-license)
@@ -175,6 +176,10 @@ ipdb_isp_domain
 
 $ipdb_isp_domain - ISP name, for example, "电信", "ChinaTelecom"
 
+ipdb_raw
+--------
+
+$ipdb_raw - raw info, for example, "中国\t内蒙古\t呼和浩特"，"China\tNei Mongol\tHohhot"
 
 [Back to TOC](#table-of-contents)
 
@@ -201,3 +206,4 @@ See Also
 ========
 
 + [ngx_http_geoip_module](http://nginx.org/en/docs/http/ngx_http_geoip_module.html#geoip_proxy)
++ [github.com/ipipdotnet/ipdb-c](https://github.com/ipipdotnet/ipdb-c)

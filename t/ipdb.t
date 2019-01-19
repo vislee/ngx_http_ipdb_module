@@ -98,13 +98,19 @@ http {
             }
 
         }
+
+
+        location /raw/ {
+            ipdb_specifies_addr $http_addr;
+            return 200 $ipdb_raw;
+        }
     }
 
 }
 
 EOF
 
-$t->try_run('no ipdb')->plan(12);
+$t->try_run('no ipdb')->plan(14);
 
 ###############################################################################
 like(http(<<EOF), qr/testipdb/, 'ipdb test');
@@ -196,5 +202,21 @@ like(http(<<EOF), qr/北京/, 'ipdb spec region');
 GET /spec/city/args?addr=119.75.210.2 HTTP/1.0
 Host: localhost
 addr: 36.102.4.81
+
+EOF
+
+
+like(http(<<EOF), qr/中国\t内蒙古\t呼和浩特$/, 'ipdb raw');
+GET /raw/ HTTP/1.0
+Host: localhost
+addr: 36.102.4.81
+
+EOF
+
+
+like(http(<<EOF), qr/局域网\t局域网\t$/, 'ipdb raw');
+GET /raw/ HTTP/1.0
+Host: localhost
+addr: 192.168.1.2
 
 EOF

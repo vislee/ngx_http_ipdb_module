@@ -15,6 +15,8 @@
 #define NGX_IPDB_isp_domain      4
 #define NGX_IPDB_latitude        5
 #define NGX_IPDB_longitude       6
+// all item
+#define NGX_IPDB_raw             20
 
 typedef struct {
     ipdb_reader    *ipdb;
@@ -136,6 +138,10 @@ static ngx_http_variable_t  ngx_http_ipdb_vars[] = {
     { ngx_string("ipdb_isp_domain"), NULL,
       ngx_http_ipdb_variable,
       NGX_IPDB_isp_domain, 0, 0 },
+
+    { ngx_string("ipdb_raw"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_raw, 0, 0 },
 
       ngx_http_null_variable
 };
@@ -358,6 +364,8 @@ ngx_http_ipdb_get_index_item(char *v, ngx_int_t idx)
     ngx_int_t n = 0;
 
     if (v == NULL) return NULL;
+
+    if (idx >= NGX_IPDB_raw) return v;
 
     p = v;
     q = p;
