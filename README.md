@@ -55,7 +55,7 @@ configure --prefix=/usr/local/nginx --add-dynamic-module=./github.com/vislee/ngx
 The following information is success:
 
  >> checking for json-c library ... found
- >> + ngx_http_ipdb_module was configured
+ >> \+ ngx_http_ipdb_module was configured
 
 
 [Back to TOC](#table-of-contents)
