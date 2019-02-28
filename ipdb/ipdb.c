@@ -25,37 +25,63 @@ ipdb_meta_data *parse_meta_data(const char *meta_json) {
     int i = 0;
 
     ipdb_meta_data *meta_data = (ipdb_meta_data *) malloc(sizeof(ipdb_meta_data));
+    if (meta_data == NULL) {
+        return NULL;
+    }
+
     memset(meta_data, 0, sizeof(ipdb_meta_data));
+
     json_object *obj = json_tokener_parse(meta_json);
-    json_object *value;
-    json_object_object_get_ex(obj, "node_count", &value);
-    meta_data->node_count = json_object_get_int(value);
-    json_object_object_get_ex(obj, "total_size", &value);
-    meta_data->total_size = json_object_get_int(value);
-    json_object_object_get_ex(obj, "build", &value);
-    meta_data->build_time = json_object_get_int64(value);
-    json_object_object_get_ex(obj, "ip_version", &value);
-    meta_data->ip_version = (short) json_object_get_int(value);
-    json_object_object_get_ex(obj, "fields", &value);
-    meta_data->fields_length = json_object_array_length(value);
+    json_object *value = NULL;
+
+    if (json_object_object_get_ex(obj, "node_count", &value)) {
+        meta_data->node_count = json_object_get_int(value);
+    }
+
+    if (json_object_object_get_ex(obj, "total_size", &value)) {
+        meta_data->total_size = json_object_get_int(value);
+    }
+
+    if (json_object_object_get_ex(obj, "build", &value)){
+        meta_data->build_time = json_object_get_int64(value);
+    }
+
+    if (json_object_object_get_ex(obj, "ip_version", &value)) {
+        meta_data->ip_version = (short) json_object_get_int(value);
+    }
+
+    if (json_object_object_get_ex(obj, "fields", &value)) {
+        meta_data->fields_length = json_object_array_length(value);
+    }
+
     meta_data->fields = (char **) malloc(sizeof(char *) * meta_data->fields_length);
+    if (meta_data->fields == NULL) {
+        return NULL;
+    }
     for (i = 0; i < meta_data->fields_length; ++i) {
         json_object *it = json_object_array_get_idx(value, i);
         meta_data->fields[i] = malloc(sizeof(char) * json_object_get_string_len(it) + 1);
         strcpy(meta_data->fields[i], json_object_get_string(it));
     }
-    json_object_object_get_ex(obj, "languages", &value);
-    meta_data->language_length = json_object_object_length(value);
-    meta_data->language = (ipdb_meta_data_language *) malloc(
-            sizeof(ipdb_meta_data_language) * meta_data->language_length);
-    struct json_object_iterator language = json_object_iter_begin(value);
-    for (i = 0; i < meta_data->language_length; ++i) {
-        strcpy(meta_data->language[i].name, json_object_iter_peek_name(&language));
-        struct json_object *it = json_object_iter_peek_value(&language);
-        meta_data->language[i].offset = json_object_get_int(it);
-        json_object_iter_next(&language);
+
+    if (json_object_object_get_ex(obj, "languages", &value)) {
+        meta_data->language_length = json_object_object_length(value);
+        meta_data->language = (ipdb_meta_data_language *) malloc(
+                sizeof(ipdb_meta_data_language) * meta_data->language_length);
+        if (meta_data->language == NULL) {
+            return NULL;
+        }
+
+        struct json_object_iterator language = json_object_iter_begin(value);
+        for (i = 0; i < meta_data->language_length; ++i) {
+            strcpy(meta_data->language[i].name, json_object_iter_peek_name(&language));
+            struct json_object *it = json_object_iter_peek_value(&language);
+            meta_data->language[i].offset = json_object_get_int(it);
+            json_object_iter_next(&language);
+        }
+        json_object_iter_end(value);
     }
-    json_object_iter_end(value);
+
     return meta_data;
 }
 
@@ -85,7 +111,7 @@ int ipdb_reader_new(const char *file, ipdb_reader **reader) {
     fread(meta_json, sizeof(char), meta_length, fd);
     rd->meta = parse_meta_data(meta_json);
     free(meta_json);
-    if (rd->meta->language_length == 0 || rd->meta->fields_length == 0) {
+    if (rd->meta == NULL || rd->meta->language_length == 0 || rd->meta->fields_length == 0) {
         return ErrMetaData;
     }
 
