@@ -373,20 +373,20 @@ ngx_http_ipdb_get_index_item(char *v, ngx_int_t idx)
     while (*p) {
 
         if (*p == '\t') {
-            *p = 0;
+
             if (idx == n) {
-                break;
+                *p = 0;
+                return q;
             }
 
-            ++p;
-            q = p;
+            q = p + 1;
             ++n;
         }
 
         ++p;
     }
 
-    if (idx == n || idx == n+1) {
+    if (*p == 0 && idx == n) {
         return q;
     }
 
