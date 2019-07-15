@@ -88,7 +88,8 @@ http {
         location / {
             # ipdb_specifies_addr $http_addr;
             # ipdb_language EN;
-            return 200 $ipdb_city_name;
+
+            return 200 "country_name:$ipdb_country_name, raw_info:$ipdb_raw";
         }
     }
 }
