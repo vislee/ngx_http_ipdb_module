@@ -143,7 +143,11 @@ static ngx_http_variable_t  ngx_http_ipdb_vars[] = {
       ngx_http_ipdb_variable,
       NGX_IPDB_raw, 0, 0 },
 
+#if (nginx_version >= 1013004)
       ngx_http_null_variable
+#else
+    { ngx_null_string, NULL, NULL, 0, 0, 0 }
+#endif
 };
 
 
