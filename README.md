@@ -23,7 +23,23 @@ Table of Contents
     * [$ipdb_country_name](#ipdb_country_name)
     * [$ipdb_region_name](#ipdb_region_name)
     * [$ipdb_city_name](#ipdb_city_name)
+    * [$ipdb_owner_domain](#ipdb_owner_domain)
     * [$ipdb_isp_domain](#ipdb_isp_domain)
+    * [$ipdb_latitude](#ipdb_latitude)
+    * [$ipdb_longitude](#ipdb_longitude)
+    * [$ipdb_timezone](#ipdb_timezone)
+    * [$ipdb_utc_offset](#ipdb_utc_offset)
+    * [$ipdb_china_admin_code](#ipdb_china_admin_code)
+    * [$ipdb_idd_code](#ipdb_idd_code)
+    * [$ipdb_country_code](#ipdb_country_code)
+    * [$ipdb_continent_code](#ipdb_continent_code)
+    * [$ipdb_idc](#ipdb_idc)
+    * [$ipdb_base_station](#ipdb_base_station)
+    * [$ipdb_country_code3](#ipdb_country_code3)
+    * [$ipdb_european_union](#ipdb_european_union)
+    * [$ipdb_currency_code](#ipdb_currency_code)
+    * [$ipdb_currency_name](#ipdb_currency_name)
+    * [$ipdb_anycast](#ipdb_anycast)
     * [$ipdb_raw](#ipdb_raw)
 * [TODO](#todo)
 * [Author](#author)
@@ -102,12 +118,6 @@ TODO
 ==========
 
  + add variable
-     * ipdb_country_code
-     * ipdb_continent_code
-     * ipdb_org
-     * ipdb_idc
-     * ipdb_latitude
-     * ipdb_longitude
 
 [Back to TOC](#table-of-contents)
 
@@ -185,15 +195,83 @@ ipdb_city_name
 
 $ipdb_city_name - city name, for example, "呼和浩特", "Hohhot", "北京", "Beijing"
 
+
+ipdb_owner_domain
+-----------------
+
+
 ipdb_isp_domain
 ---------------
 
 $ipdb_isp_domain - ISP name, for example, "电信", "ChinaTelecom"
 
+
+ipdb_latitude
+-------------
+
+
+ipdb_longitude
+---------------
+
+
+ipdb_timezone
+--------------
+
+
+ipdb_utc_offset
+----------------
+
+
+ipdb_china_admin_code
+---------------------
+
+
+ipdb_idd_code
+-------------
+
+
+ipdb_country_code
+-----------------
+
+
+ipdb_continent_code
+-------------------
+
+
+ipdb_idc
+--------
+
+
+ipdb_base_station
+-----------------
+
+
+ipdb_country_code3
+------------------
+
+
+ipdb_european_union
+-------------------
+
+
+ipdb_currency_code
+-------------------
+
+
+ipdb_currency_name
+------------------
+
+
+ipdb_anycast
+------------
+
+
 ipdb_raw
 --------
 
 $ipdb_raw - raw info, for example, "中国\t内蒙古\t呼和浩特"，"China\tNei Mongol\tHohhot"
+
+*NOTE:* If you need to get multiple variables, use this `$ipdb_raw`.
 
 [Back to TOC](#table-of-contents)
 
