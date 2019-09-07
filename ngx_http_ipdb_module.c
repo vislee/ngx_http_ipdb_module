@@ -15,6 +15,21 @@
 #define NGX_IPDB_isp_domain      4
 #define NGX_IPDB_latitude        5
 #define NGX_IPDB_longitude       6
+#define NGX_IPDB_timezone        7
+
+#define NGX_IPDB_utc_offset          8
+#define NGX_IPDB_china_admin_code    9
+#define NGX_IPDB_idd_code            10
+#define NGX_IPDB_country_code        11
+#define NGX_IPDB_continent_code      12
+#define NGX_IPDB_idc                 13
+#define NGX_IPDB_base_station        14
+#define NGX_IPDB_country_code3       15
+#define NGX_IPDB_european_union      16
+#define NGX_IPDB_currency_code       17
+#define NGX_IPDB_currency_name       18
+#define NGX_IPDB_anycast             19
+
 // all item
 #define NGX_IPDB_raw             20
 
@@ -79,7 +94,7 @@ static ngx_command_t  ngx_http_ipdb_commands[] = {
       offsetof(ngx_http_ipdb_main_conf_t, proxy_recursive),
       NULL },
 
-     { ngx_string("ipdb_specifies_addr"),
+    { ngx_string("ipdb_specifies_addr"),
       NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_TAKE1,
       ngx_conf_set_str_slot,
       NGX_HTTP_LOC_CONF_OFFSET,
@@ -135,9 +150,73 @@ static ngx_http_variable_t  ngx_http_ipdb_vars[] = {
       ngx_http_ipdb_variable,
       NGX_IPDB_city_name, 0, 0 },
 
+    { ngx_string("ipdb_owner_domain"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_owner_domain, 0, 0 },
+
     { ngx_string("ipdb_isp_domain"), NULL,
       ngx_http_ipdb_variable,
       NGX_IPDB_isp_domain, 0, 0 },
+
+    { ngx_string("ipdb_latitude"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_latitude, 0, 0 },
+
+    { ngx_string("ipdb_longitude"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_longitude, 0, 0 },
+
+    { ngx_string("ipdb_timezone"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_timezone, 0, 0 },
+
+    { ngx_string("ipdb_utc_offset"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_utc_offset, 0, 0 },
+
+    { ngx_string("ipdb_china_admin_code"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_china_admin_code, 0, 0 },
+
+    { ngx_string("ipdb_idd_code"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_idd_code, 0, 0 },
+
+    { ngx_string("ipdb_country_code"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_country_code, 0, 0 },
+
+    { ngx_string("ipdb_continent_code"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_continent_code, 0, 0 },
+
+    { ngx_string("ipdb_idc"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_idc, 0, 0 },
+
+    { ngx_string("ipdb_base_station"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_base_station, 0, 0 },
+
+    { ngx_string("ipdb_country_code3"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_country_code3, 0, 0 },
+
+    { ngx_string("ipdb_european_union"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_european_union, 0, 0 },
+
+    { ngx_string("ipdb_currency_code"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_currency_code, 0, 0 },
+
+    { ngx_string("ipdb_currency_name"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_currency_name, 0, 0 },
+
+    { ngx_string("ipdb_anycast"), NULL,
+      ngx_http_ipdb_variable,
+      NGX_IPDB_anycast, 0, 0 },
 
     { ngx_string("ipdb_raw"), NULL,
       ngx_http_ipdb_variable,
