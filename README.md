@@ -152,7 +152,7 @@ ipdb_proxy
 
 **context:** *http*
 
-Defines trusted addresses.
+Defines trusted addresses. Just like [`geoip_proxy`](http://nginx.org/en/docs/http/ngx_http_geoip_module.html#geoip_proxy).
 
 ipdb_proxy_recursive
 --------------------
@@ -162,7 +162,7 @@ ipdb_proxy_recursive
 
 **context:** *http*
 
-Is recursive search.
+Is recursive search. Just like [`geoip_proxy_recursive`](http://nginx.org/en/docs/http/ngx_http_geoip_module.html#geoip_proxy_recursive)
 
 ipdb_specifies_addr
 -------------------
