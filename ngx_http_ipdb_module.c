@@ -5,6 +5,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
+#include <arpa/inet.h>
 
 #include "ipdb/ipdb.h"
 
@@ -35,6 +36,7 @@
 
 typedef struct {
     ipdb_reader    *ipdb;
+    ipdb_reader    *ipdbv6;
     ngx_array_t    *proxies;    /* array of ngx_cidr_t */
     ngx_flag_t      proxy_recursive;
 } ngx_http_ipdb_main_conf_t;
@@ -55,6 +57,7 @@ static char *ngx_http_ipdb_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
 static void ngx_http_ipdb_cleanup(void *data);
 static char *ngx_http_ipdb_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+static char *ngx_http_ipdbv6_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static char *ngx_http_ipdb_proxy(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 static ngx_int_t ngx_http_ipdb_variable(ngx_http_request_t *r,
     ngx_http_variable_value_t *v, uintptr_t data);
@@ -69,6 +72,13 @@ static ngx_command_t  ngx_http_ipdb_commands[] = {
     { ngx_string("ipdb"),
       NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
       ngx_http_ipdb_open,
+      NGX_HTTP_MAIN_CONF_OFFSET,
+      0,
+      NULL },
+
+    { ngx_string("ipdbv6"),
+      NGX_HTTP_MAIN_CONF|NGX_CONF_TAKE1,
+      ngx_http_ipdbv6_open,
       NGX_HTTP_MAIN_CONF_OFFSET,
       0,
       NULL },
@@ -349,6 +359,9 @@ ngx_http_ipdb_cleanup(void *data)
     if (imcf->ipdb) {
         ipdb_reader_free(&imcf->ipdb);
     }
+    if (imcf->ipdbv6) {
+        ipdb_reader_free(&imcf->ipdbv6);
+    }
 }
 
 
@@ -369,6 +382,32 @@ ngx_http_ipdb_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     err = ipdb_reader_new((char *) value[1].data, &imcf->ipdb);
 
     if (err || imcf->ipdb == NULL) {
+        ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
+                           "ipdb_reader_new(\"%V\") failed", &value[1]);
+
+        return NGX_CONF_ERROR;
+    }
+
+    return NGX_CONF_OK;
+}
+
+static char *
+ngx_http_ipdbv6_open(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+{
+    ngx_int_t                   err;
+    ngx_http_ipdb_main_conf_t  *imcf = conf;
+
+    ngx_str_t  *value;
+
+    if (imcf->ipdbv6) {
+        return "is duplicate";
+    }
+
+    value = cf->args->elts;
+
+    err = ipdb_reader_new((char *) value[1].data, &imcf->ipdbv6);
+
+    if (err || imcf->ipdbv6 == NULL) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0,
                            "ipdb_reader_new(\"%V\") failed", &value[1]);
 
@@ -572,6 +611,8 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     ngx_array_t                 *xfwd;
     ngx_http_ipdb_main_conf_t   *imcf;
     ngx_http_ipdb_loc_conf_t    *ilcf;
+    struct in_addr              addr4;
+    struct in6_addr             addr6;
 
 #if (NGX_DEBUG)
     ngx_str_t               debug;
@@ -582,7 +623,7 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
 
     imcf = ngx_http_get_module_main_conf(r, ngx_http_ipdb_module);
 
-    if (imcf == NULL || imcf->ipdb == NULL) {
+    if (imcf == NULL || (imcf->ipdb == NULL && imcf->ipdbv6 == NULL)) {
         goto not_found;
     }
 
@@ -608,8 +649,15 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
         ngx_memcpy(t, spec_addr.data, spec_addr.len);
         t[spec_addr.len] = 0;
 
-        err = ipdb_reader_find(imcf->ipdb, (const char*)t,
-            (const char *)ilcf->lang.data, body);
+        if (imcf->ipdb && inet_pton(AF_INET, t, &addr4)) {
+            err = ipdb_reader_find(imcf->ipdb, (const char*)t,
+                (const char*)ilcf->lang.data,body);
+        } else if (imcf->ipdbv6 && inet_pton(AF_INET6, t, &addr6)) {
+            err = ipdb_reader_find(imcf->ipdbv6, (const char*)t,
+                (const char*)ilcf->lang.data, body);
+        } else {
+            err = 101;
+        }
 
         ngx_pfree(r->pool, t);
 
@@ -623,8 +671,19 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
                 imcf->proxies, imcf->proxy_recursive);
         }
 
-        err = ngx_http_ipdb_item_by_addr(imcf->ipdb, &addr,
-            (const char *)ilcf->lang.data, body);
+        if (imcf->ipdb && addr.sockaddr->sa_family == AF_INET) {
+            err = ngx_http_ipdb_item_by_addr(imcf->ipdb, &addr,
+                (const char *)ilcf->lang.data, body);
+        }
+#if (NGX_HAVE_INET6)
+        else if (imcf->ipdbv6 && addr.sockaddr->sa_family == AF_INET6) {
+            err = ngx_http_ipdb_item_by_addr(imcf->ipdbv6, &addr,
+                (const char *)ilcf->lang.data, body);
+        }
+#endif
+        else {
+            err = 102;
+        }
     }
 
     if (err) {

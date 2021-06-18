@@ -15,6 +15,7 @@ Table of Contents
 * [Example Configuration](#example-configuration)
 * [Directives](#directives)
     * [ipdb](#ipdb)
+    * [ipdbv6](#ipdbv6)
     * [ipdb_language](#ipdb_language)
     * [ipdb_proxy](#ipdb_proxy)
     * [ipdb_proxy_recursive](#ipdb_proxy_recursive)
@@ -91,6 +92,7 @@ http {
     ......
 
     ipdb /tmp/nginx/conf/ipiptest.ipdb;
+    #ipdbv6 /tmp/nginx/conf/ipiptestv6.ipdb;
     ipdb_language CN;
     ipdb_proxy 127.0.0.1;
     ipdb_proxy_recursive on;
@@ -132,7 +134,17 @@ ipdb
 
 **context:** *http*
 
-Specifies a database.
+Specifies a ipv4 database.
+
+ipdbv6
+----
+**syntax:** *ipdbv6 file;*
+
+**default:** *-*
+
+**context:** *http*
+
+Specifies a ipv6 database.
 
 ipdb_language
 -------------
