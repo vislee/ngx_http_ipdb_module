@@ -173,7 +173,7 @@ int ipdb_resolve(ipdb_reader *reader, int node, const char **bytes) {
         return ErrDatabaseError;
     }
 
-    int size = (reader->data[resolved] << 8) | reader->data[resolved + 2];
+    int size = (reader->data[resolved] << 8) | reader->data[resolved + 1];
     if ((resolved + 2 + size) > reader->data_size) {
         return ErrDatabaseError;
     }
