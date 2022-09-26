@@ -569,7 +569,13 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
     ngx_int_t                    err;
     ngx_str_t                    spec_addr;
     ngx_addr_t                   addr;
+
+#if (nginx_version >= 1023000)
+    ngx_table_elt_t             *xfwd;
+#else
     ngx_array_t                 *xfwd;
+#endif
+
     ngx_http_ipdb_main_conf_t   *imcf;
     ngx_http_ipdb_loc_conf_t    *ilcf;
 
@@ -617,8 +623,19 @@ ngx_http_ipdb_variable(ngx_http_request_t *r, ngx_http_variable_value_t *v,
         addr.sockaddr = r->connection->sockaddr;
         addr.socklen = r->connection->socklen;
 
+#if (nginx_version >= 1023000)
+        xfwd = r->headers_in.x_forwarded_for;
+#else
         xfwd = &r->headers_in.x_forwarded_for;
-        if (xfwd->nelts > 0 && imcf->proxies != NULL) {
+#endif
+
+        if (
+#if (nginx_version >= 1023000)
+            xfwd != NULL
+#else
+            xfwd->nelts > 0
+#endif
+             && imcf->proxies != NULL) {
             (void) ngx_http_get_forwarded_addr(r, &addr, xfwd, NULL,
                 imcf->proxies, imcf->proxy_recursive);
         }
